@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Volume2, Sparkles, User, Loader2 } from 'lucide-react';
+import { Send, Volume2, Sparkles, User } from 'lucide-react';
 import { FABIEN_PROFILE } from '../data/fabienProfile.ts';
 
 export interface MessageItem {
@@ -52,9 +52,9 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#FAF7F0] rounded-2xl border border-[#E9E3D8] shadow-sm overflow-hidden">
+    <div className="asyt-chat-card flex flex-col h-full bg-[#FAF7F0] rounded-2xl border border-[#E9E3D8] shadow-sm overflow-hidden">
       {/* Stream Header */}
-      <div className="px-6 py-4 border-b border-[#EBE4D8] flex items-center justify-between bg-[#F8F4EC]">
+      <div className="asyt-chat-head px-6 py-4 border-b border-[#EBE4D8] flex items-center justify-between bg-[#F8F4EC]">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-[#9E7D47]" />
           <h2 className="font-serif text-lg font-medium text-[#26211C]">
@@ -62,12 +62,12 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
           </h2>
         </div>
         <span className="text-xs text-[#807669] font-serif italic">
-          {disabled ? (lang === 'fr' ? 'Mode lecture' : 'Read-only mode') : 'ASYt • Live AI'}
+          {disabled ? (lang === 'fr' ? 'Mode lecture' : 'Read-only mode') : 'ASYT • Live AI'}
         </span>
       </div>
 
       {/* Suggested Questions Carousel / Chips */}
-      <div className="px-5 py-3 border-b border-[#EFE8DD] bg-[#FDFBF7]/60 overflow-x-auto scrollbar-none flex gap-2">
+      <div className="asyt-chat-suggestions px-5 py-3 border-b border-[#EFE8DD] bg-[#FDFBF7]/60 overflow-x-auto scrollbar-none flex gap-2">
         {FABIEN_PROFILE.sampleQuestions.map((q, idx) => {
           const text = lang === 'en' ? q.en : q.fr;
           return (
@@ -76,7 +76,7 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
               onClick={() => handleChipClick(text)}
               disabled={disabled || isStreaming}
               title={disabled ? (lang === 'fr' ? 'IA indisponible' : 'AI offline') : undefined}
-              className="disabled:opacity-50 disabled:cursor-not-allowed shrink-0 px-3 py-1.5 rounded-full bg-[#F3EDE2] hover:bg-[#EAE1D1] text-[#3D352B] text-xs border border-[#DFD6C6] transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="asyt-chat-chip disabled:opacity-50 disabled:cursor-not-allowed shrink-0 px-3 py-1.5 rounded-full bg-[#F3EDE2] hover:bg-[#EAE1D1] text-[#3D352B] text-xs border border-[#DFD6C6] transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <Sparkles className="w-3 h-3 text-[#9E7D47]" />
               <span>{text}</span>
@@ -88,14 +88,14 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
       {/* Messages Scroll Area */}
       <div
         ref={scrollRef}
-        className="flex-1 p-5 overflow-y-auto space-y-4 max-h-[460px] min-h-[300px]"
+        className="asyt-chat-feed flex-1 p-5 overflow-y-auto space-y-4 max-h-[460px] min-h-[300px]"
       >
         {messages.map((m) => {
           const isUser = m.role === 'user';
           return (
             <div
               key={m.id}
-              className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
+              className={`asyt-message flex gap-3 ${isUser ? 'is-user justify-end' : 'is-assistant justify-start'}`}
             >
               {!isUser && (
                 <div className="w-8 h-8 rounded-full bg-[#27211B] text-[#F3EFE9] flex items-center justify-center font-serif text-xs shrink-0 shadow-sm">
@@ -104,7 +104,7 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
               )}
 
               <div
-                className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                className={`asyt-chat-bubble max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                   isUser
                     ? 'bg-[#2B251F] text-[#FAF6F0] rounded-br-sm'
                     : 'bg-[#F2ECE1] text-[#221D17] border border-[#E3DACB] rounded-bl-sm shadow-xs'
@@ -116,7 +116,7 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
                       isUser ? 'text-[#B8AEA0]' : 'text-[#7D7364]'
                     }`}
                   >
-                    {isUser ? (lang === 'en' ? 'You' : 'Vous') : 'ASYt'}
+                    {isUser ? (lang === 'en' ? 'You' : 'Vous') : 'ASYT'}
                   </span>
                   {!isUser && (
                     <button
@@ -151,7 +151,7 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
             <div className="max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed bg-[#F2ECE1] text-[#221D17] border border-[#E3DACB] rounded-bl-sm shadow-xs">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[11px] font-medium text-[#7D7364]">
-                  ASYt ({lang === 'en' ? 'Speaking...' : 'En direct...'})
+                  ASYT ({lang === 'en' ? 'Speaking...' : 'En direct...'})
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#9E7D47] animate-ping" />
               </div>
@@ -164,7 +164,7 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
       {/* Input bar */}
       <form
         onSubmit={handleSubmit}
-        className="p-3 border-t border-[#EBE4D8] bg-[#F7F2E8] flex items-center gap-2"
+        className="asyt-chat-form p-3 border-t border-[#EBE4D8] bg-[#F7F2E8] flex items-center gap-2"
       >
         <input
           type="text"
@@ -175,16 +175,16 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
           onChange={(e) => setInputText(e.target.value)}
           placeholder={
             lang === 'en'
-              ? 'Ask ASYt anything about Fabien (e.g. OMD experience, skills, karting)...'
+              ? 'Ask ASYT anything about Fabien (e.g. OMD experience, skills, karting)...'
               : 'Posez une question sur Fabien (expériences, compétences, karting)...'
           }
-          className="disabled:opacity-50 disabled:cursor-not-allowed min-w-0 flex-1 px-4 py-2.5 text-sm bg-[#FFFFFF] border border-[#DDD4C5] rounded-xl text-[#221D17] placeholder:text-[#9A9081] focus:outline-none focus:border-[#9E7D47] focus:ring-1 focus:ring-[#9E7D47]/30 transition-all"
+          className="asyt-chat-input disabled:opacity-50 disabled:cursor-not-allowed min-w-0 flex-1 px-4 py-2.5 text-sm bg-[#FFFFFF] border border-[#DDD4C5] rounded-xl text-[#221D17] placeholder:text-[#9A9081] focus:outline-none focus:border-[#9E7D47] focus:ring-1 focus:ring-[#9E7D47]/30 transition-all"
         />
         <button
           type="submit"
           disabled={disabled || isStreaming || !inputText.trim()}
           aria-label={lang === 'fr' ? 'Envoyer le message' : 'Send message'}
-          className="p-2.5 bg-[#2B251F] hover:bg-[#3E352D] disabled:cursor-not-allowed disabled:opacity-40 text-[#FAF6F0] rounded-xl transition-all cursor-pointer shadow-xs"
+          className="asyt-chat-submit p-2.5 bg-[#2B251F] hover:bg-[#3E352D] disabled:cursor-not-allowed disabled:opacity-40 text-[#FAF6F0] rounded-xl transition-all cursor-pointer shadow-xs"
           title={lang === 'en' ? 'Send message' : 'Envoyer'}
         >
           <Send className="w-4 h-4" />
