@@ -12,6 +12,7 @@ interface VoiceSphereProps {
   onToggleMute: () => void;
   onInterrupt: () => void;
   lang: 'en' | 'fr';
+  disabled?: boolean;
 }
 
 export const VoiceSphere: React.FC<VoiceSphereProps> = ({
@@ -25,6 +26,7 @@ export const VoiceSphere: React.FC<VoiceSphereProps> = ({
   onToggleMute,
   onInterrupt,
   lang,
+  disabled = false,
 }) => {
   // Compute visual ring scale based on audio volume
   const scale = 1 + Math.min(volume * 0.45, 0.45);
@@ -74,6 +76,8 @@ export const VoiceSphere: React.FC<VoiceSphereProps> = ({
               : lang === 'en'
               ? 'Listening...'
               : 'À l’écoute...'
+            : disabled
+            ? lang === 'en' ? 'Voice service offline' : 'Service vocal hors ligne'
             : lang === 'en'
             ? 'Voice Assistant Ready'
             : 'Assistant vocal prêt'}
@@ -105,7 +109,8 @@ export const VoiceSphere: React.FC<VoiceSphereProps> = ({
         {/* Central Core Sphere */}
         <button
           onClick={onToggleConnect}
-          disabled={isConnecting}
+          aria-label={lang === 'fr' ? 'Démarrer ou arrêter la conversation vocale' : 'Start or end the voice conversation'}
+          disabled={isConnecting || disabled}
           title={
             isConnected
               ? lang === 'en'
@@ -115,7 +120,7 @@ export const VoiceSphere: React.FC<VoiceSphereProps> = ({
               ? 'Click to speak with ASYt'
               : 'Cliquer pour parler avec ASYt'
           }
-          className={`group relative w-36 h-36 rounded-full flex flex-col items-center justify-center transition-all duration-500 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#9E7D47]/40 ${
+          className={`group disabled:opacity-55 disabled:cursor-not-allowed relative w-36 h-36 rounded-full flex flex-col items-center justify-center transition-all duration-500 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#9E7D47]/40 ${
             isConnected
               ? isSpeaking
                 ? 'bg-gradient-to-br from-[#2E2822] via-[#241F1A] to-[#1A1613] text-[#F7F2EA] shadow-xl shadow-[#9E7D47]/10'
@@ -217,7 +222,7 @@ export const VoiceSphere: React.FC<VoiceSphereProps> = ({
           <button
             onClick={onToggleConnect}
             disabled={isConnecting}
-            className="px-6 py-3 rounded-full bg-[#241F1A] hover:bg-[#342D26] text-[#FBF8F2] text-sm font-medium flex items-center gap-2.5 shadow-sm hover:shadow transition-all"
+            className="disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-full bg-[#241F1A] hover:bg-[#342D26] text-[#FBF8F2] text-sm font-medium flex items-center gap-2.5 shadow-sm hover:shadow transition-all"
           >
             <PhoneCall className="w-4 h-4 text-[#E6C687]" />
             <span>
