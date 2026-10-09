@@ -1,0 +1,25 @@
+# ASYt CV voice gateway (Gemini API remains server-side).
+# Create this as a Render Blueprint, then enter GEMINI_API_KEY in Render.
+# A free Render instance can suspend after inactivity and voice requests can
+# incur Gemini API charges; enable usage limits and monitor the service.
+services:
+  - type: web
+    name: asyt-fabien-voice-api
+    repo: https://github.com/fabienlufbery-hue/CV
+    branch: main
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: bun install --frozen-lockfile && bun run build
+    startCommand: bun run start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: https://fabienlufbery-hue.github.io
+      # Render prompts for this secret during the first Blueprint setup.
+      # Do not commit it or set it as VITE_*.
+      - key: GEMINI_API_KEY
+        sync: false
