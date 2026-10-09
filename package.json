@@ -1,15 +1,17 @@
 {
-  "name": "react-example",
+  "name": "asyt-fabien-voice-cv",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "start": "node server.ts",
+    "start": "bun server.ts",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "bun test server/security.test.ts",
+    "check": "bun run lint && bun run test && bun run build"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

@@ -9,6 +9,8 @@ import { VoiceSphere } from './components/VoiceSphere.tsx';
 import { ConversationStream, MessageItem } from './components/ConversationStream.tsx';
 import { ProfileDossier } from './components/ProfileDossier.tsx';
 import { LiveAudioPlayer, LiveMicRecorder } from './utils/audio.ts';
+import { apiUrl, backendConfigured, liveUrl } from './config/api.ts';
+import { WifiOff, RefreshCcw } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState<'en' | 'fr'>('en');
@@ -33,6 +35,25 @@ export default function App() {
   const micRecorderRef = useRef<LiveMicRecorder | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const activeStreamTextRef = useRef('');
+  const mutedRef = useRef(isMuted);
+  const speakingRef = useRef(isSpeaking);
+  const [backendState, setBackendState] = useState<'checking' | 'online' | 'offline'>(backendConfigured ? 'checking' : 'offline');
+  const [healthRetry, setHealthRetry] = useState(0);
+  const [connectionError, setConnectionError] = useState('');
+
+  useEffect(() => { mutedRef.current = isMuted; }, [isMuted]);
+  useEffect(() => { speakingRef.current = isSpeaking; }, [isSpeaking]);
+  useEffect(() => {
+    if (!backendConfigured) { setBackendState('offline'); return; }
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 7000);
+    setBackendState('checking');
+    fetch(apiUrl('/api/health'), { signal: controller.signal })
+      .then((response) => setBackendState(response.ok ? 'online' : 'offline'))
+      .catch(() => setBackendState('offline'))
+      .finally(() => window.clearTimeout(timeout));
+    return () => { window.clearTimeout(timeout); controller.abort(); };
+  }, [healthRetry]);
 
   // Set initial greeting
   useEffect(() => {
@@ -64,7 +85,8 @@ export default function App() {
 
   // Connect to Gemini Live WebSocket
   const connectLive = async () => {
-    if (isConnected || isConnecting) return;
+    if (isConnected || isConnecting || backendState !== 'online') return;
+    setConnectionError('');
     setIsConnecting(true);
 
     try {
@@ -83,28 +105,30 @@ export default function App() {
       };
 
       // 2. Setup WebSocket
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/live`;
-      const ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(liveUrl());
       wsRef.current = ws;
+      let ready = false;
+      const connectTimeout = window.setTimeout(() => {
+        if (!ready && wsRef.current === ws) {
+          setConnectionError(lang === 'fr' ? 'Connexion vocale trop longue.' : 'Voice connection timed out.');
+          ws.close();
+        }
+      }, 15000);
 
-      ws.onopen = async () => {
-        console.log('[Live] Connected to WebSocket bridge');
-        setIsConnected(true);
-        setIsConnecting(false);
+      const startMicrophone = async () => {
 
         // 3. Initialize Mic Recorder
         try {
           const mic = new LiveMicRecorder();
           micRecorderRef.current = mic;
           mic.onVolumeChange = (vol) => {
-            if (!isSpeaking) {
+            if (!speakingRef.current) {
               setAudioVolume(vol);
             }
           };
 
           await mic.start((base64Chunk) => {
-            if (!isMuted && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            if (!mutedRef.current && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(
                 JSON.stringify({
                   type: 'audio',
@@ -121,11 +145,18 @@ export default function App() {
         }
       };
 
+      ws.onopen = () => { /* Wait for Gemini's ready acknowledgement. */ };
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
 
-          if (msg.type === 'audio' && msg.audio) {
+          if (msg.type === 'ready') {
+            ready = true;
+            window.clearTimeout(connectTimeout);
+            setIsConnected(true);
+            setIsConnecting(false);
+            void startMicrophone();
+          } else if (msg.type === 'audio' && msg.audio) {
             // Play 24kHz raw PCM chunk
             audioPlayerRef.current?.playChunk(msg.audio);
             setIsSpeaking(true);
@@ -177,8 +208,9 @@ export default function App() {
             activeStreamTextRef.current = '';
             setStreamingText('');
             setIsStreaming(false);
-          } else if (msg.type === 'error') {
-            console.error('[Live Server Error]:', msg.error);
+          } else if (msg.type === 'error' || msg.type === 'live_closed') {
+            setConnectionError(lang === 'fr' ? 'Session vocale interrompue, réessayez.' : 'Voice session interrupted. Please retry.');
+            disconnectLive();
           }
         } catch (err) {
           console.error('[Live WebSocket Message parse error]:', err);
@@ -186,16 +218,21 @@ export default function App() {
       };
 
       ws.onclose = () => {
+        window.clearTimeout(connectTimeout);
+        if (!ready && wsRef.current === ws) setConnectionError(lang === 'fr' ? 'Connexion vocale impossible.' : 'Voice connection failed.');
         console.log('[Live] WebSocket closed');
         disconnectLive();
       };
 
       ws.onerror = (err) => {
+        window.clearTimeout(connectTimeout);
+        setConnectionError(lang === 'fr' ? 'Erreur réseau de l’assistant vocal.' : 'Voice connection network error.');
         console.error('[Live] WebSocket error:', err);
         disconnectLive();
       };
     } catch (e) {
       console.error('[Live Init error]:', e);
+      setConnectionError(lang === 'fr' ? 'Le micro n’a pas pu démarrer.' : 'Microphone could not start.');
       setIsConnecting(false);
       setIsConnected(false);
     }
@@ -270,7 +307,8 @@ export default function App() {
       }
 
       setIsPlayingTTS(true);
-      const res = await fetch('/api/tts', {
+      if (backendState !== 'online') return;
+      const res = await fetch(apiUrl('/api/tts'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, voice: 'Fenrir' }),
@@ -289,6 +327,8 @@ export default function App() {
           setIsPlayingTTS(false);
         };
         await audio.play();
+      } else {
+        setIsPlayingTTS(false);
       }
     } catch (e) {
       console.error('Error playing TTS:', e);
@@ -298,7 +338,12 @@ export default function App() {
 
   // Send a message (either typed or clicked)
   const handleSendMessage = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isStreaming) return;
+    if (backendState !== 'online') {
+      setConnectionError(lang === 'fr' ? 'Le chat nécessite un serveur actif.' : 'Chat requires a running server.');
+      return;
+    }
+    setConnectionError('');
 
     // 1. Add user message to transcript
     const userMsg: MessageItem = {
@@ -325,8 +370,9 @@ export default function App() {
       setIsStreaming(true);
       setStreamingText(lang === 'en' ? 'ASYt is formulating reply...' : 'ASYt formule sa réponse...');
 
-      const chatRes = await fetch('/api/chat', {
+      const chatRes = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
+        signal: AbortSignal.timeout(30000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
@@ -382,9 +428,32 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+        {backendState !== 'online' && (
+          <section role="status" aria-live="polite" className="mb-7 rounded-2xl border border-[#DED3BF] bg-[#F3EBDD] px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+            <div className="flex items-start gap-3">
+              <WifiOff aria-hidden="true" className="mt-0.5 w-5 h-5 text-[#9A7B48] shrink-0" />
+              <div>
+                <p className="font-semibold text-sm text-[#31291E]">
+                  {backendState === 'checking' ? (lang === 'fr' ? 'Vérification du serveur vocal…' : 'Checking voice service…')
+                    : (lang === 'fr' ? 'CV disponible · assistant IA hors ligne' : 'CV available · AI assistant offline')}
+                </p>
+                <p className="mt-1 text-xs sm:text-sm text-[#675A48]">
+                  {lang === 'fr' ? 'Le dossier reste consultable. Le chat et la voix nécessitent un serveur Gemini actif.'
+                    : 'The profile remains accessible. Chat and voice need a running Gemini server.'}
+                </p>
+              </div>
+            </div>
+            {backendConfigured && backendState === 'offline' && (
+              <button type="button" onClick={() => setHealthRetry((v) => v + 1)} className="self-start sm:self-auto inline-flex items-center gap-2 rounded-full border border-[#CBBCA3] px-4 py-2 text-xs font-semibold hover:bg-white transition-colors">
+                <RefreshCcw className="w-3.5 h-3.5" />{lang === 'fr' ? 'Réessayer' : 'Try again'}
+              </button>
+            )}
+          </section>
+        )}
+        {connectionError && <p role="alert" className="mb-5 rounded-xl bg-[#FCEFEB] border border-[#EAD3CA] px-4 py-3 text-sm text-[#8A3628]">{connectionError}</p>}
         {/* Intro Subtitle Banner */}
-        <div className="mb-8 text-center max-w-2xl mx-auto">
+        <div className="mb-8 sm:mb-10 text-center max-w-2xl mx-auto">
           <p className="text-xs uppercase tracking-widest text-[#9A7B48] font-semibold mb-1">
             {lang === 'en' ? 'Executive Profile & AI Voice' : 'Profil Cadre & Voix IA'}
           </p>
@@ -399,7 +468,7 @@ export default function App() {
         </div>
 
         {/* 2-Column Responsive Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
           {/* Left Column: Voice Sphere & Conversation Transcript */}
           <div className="lg:col-span-5 flex flex-col gap-6">
             <VoiceSphere
@@ -413,6 +482,7 @@ export default function App() {
               onToggleMute={toggleMute}
               onInterrupt={handleInterrupt}
               lang={lang}
+              disabled={backendState !== 'online'}
             />
 
             <ConversationStream
@@ -423,6 +493,7 @@ export default function App() {
               onPlayTTS={playTTS}
               lang={lang}
               isPlayingTTS={isPlayingTTS}
+              disabled={backendState !== 'online'}
             />
           </div>
 
@@ -431,6 +502,7 @@ export default function App() {
             <ProfileDossier
               lang={lang}
               onAskTopic={(topic) => handleSendMessage(topic)}
+              disabled={backendState !== 'online'}
             />
           </div>
         </div>
