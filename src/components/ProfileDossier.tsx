@@ -73,10 +73,10 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
       </div>
 
       {/* Tabs navigation */}
-      <div className="flex border-b border-[#EBE4D7] bg-[#F7F3EB] px-4 overflow-x-auto scrollbar-none">
+      <div className="flex border-b border-[#EBE4D7] bg-[#F7F3EB] px-2 sm:px-4 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab('experiences')}
-          className={`px-4 py-3 text-xs md:text-sm font-medium border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`px-3 sm:px-4 py-3 text-xs md:text-sm font-medium border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'experiences'
               ? 'border-[#8F7449] text-[#1E1914] font-semibold'
               : 'border-transparent text-[#6F6659] hover:text-[#25201A]'
@@ -88,7 +88,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
 
         <button
           onClick={() => setActiveTab('education')}
-          className={`px-4 py-3 text-xs md:text-sm font-medium border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`px-3 sm:px-4 py-3 text-xs md:text-sm font-medium border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'education'
               ? 'border-[#8F7449] text-[#1E1914] font-semibold'
               : 'border-transparent text-[#6F6659] hover:text-[#25201A]'
@@ -100,7 +100,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
 
         <button
           onClick={() => setActiveTab('skills')}
-          className={`px-4 py-3 text-xs md:text-sm font-medium border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`px-3 sm:px-4 py-3 text-xs md:text-sm font-medium border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'skills'
               ? 'border-[#8F7449] text-[#1E1914] font-semibold'
               : 'border-transparent text-[#6F6659] hover:text-[#25201A]'
@@ -112,7 +112,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
 
         <button
           onClick={() => setActiveTab('passions')}
-          className={`px-4 py-3 text-xs md:text-sm font-medium border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`px-3 sm:px-4 py-3 text-xs md:text-sm font-medium border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'passions'
               ? 'border-[#8F7449] text-[#1E1914] font-semibold'
               : 'border-transparent text-[#6F6659] hover:text-[#25201A]'
@@ -124,13 +124,13 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
       </div>
 
       {/* Tab Content */}
-      <div className="p-6 flex-1 overflow-y-auto">
+      <div className="p-4 sm:p-6 flex-1 overflow-y-auto">
         {activeTab === 'experiences' && (
           <div className="space-y-6">
             {FABIEN_PROFILE.experiences.map((exp, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] hover:border-[#D5C7B0] transition-all"
+                className="editorial-card p-5 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] hover:border-[#D5C7B0] transition-all"
               >
                 <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 mb-2">
                   <div>
@@ -252,7 +252,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
                 {FABIEN_PROFILE.tools.map((tool, tIdx) => (
                   <div
                     key={tIdx}
-                    className="p-3 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] text-center"
+                    className="editorial-card p-3 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] text-center"
                   >
                     <p className="text-xs font-semibold text-[#251E17]">{tool.name}</p>
                     <span className="text-[10px] text-[#867B6C] uppercase tracking-wider font-mono">
@@ -270,7 +270,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
             {FABIEN_PROFILE.passions.map((p, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] hover:border-[#D5C7B0] transition-all flex flex-col justify-between"
+                className="editorial-card p-5 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] hover:border-[#D5C7B0] transition-all flex flex-col justify-between"
               >
                 <div>
                   <h4 className="font-serif text-lg font-semibold text-[#211C16] mb-1.5">
