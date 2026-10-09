@@ -24,9 +24,9 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
   const [activeTab, setActiveTab] = useState<'experiences' | 'education' | 'skills' | 'passions'>('experiences');
 
   return (
-    <div className="bg-[#FAF7F0] rounded-2xl border border-[#E9E3D8] shadow-sm overflow-hidden flex flex-col">
+    <div className="asyt-dossier bg-[#FAF7F0] rounded-2xl border border-[#E9E3D8] shadow-sm overflow-hidden flex flex-col">
       {/* Dossier Header */}
-      <div className="p-6 md:p-8 bg-[#F6F1E6] border-b border-[#E9E1D4]">
+      <div className="asyt-dossier-head p-6 md:p-8 bg-[#F6F1E6] border-b border-[#E9E1D4]">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -36,9 +36,9 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
               <span className="text-[#C5BBAA]">•</span>
               <span className="text-xs text-[#6F6659]">ESCE Business School</span>
             </div>
-            <h1 className="font-serif text-3xl md:text-4xl font-medium tracking-tight text-[#1E1914]">
+            <h2 className="font-serif text-3xl md:text-4xl font-medium tracking-tight text-[#1E1914]">
               {FABIEN_PROFILE.name}
-            </h1>
+            </h2>
             <p className="font-serif italic text-base text-[#61574A] mt-1">
               {lang === 'en' ? FABIEN_PROFILE.titleEn : FABIEN_PROFILE.titleFr}
             </p>
@@ -74,7 +74,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
       </div>
 
       {/* Tabs navigation */}
-      <div className="flex border-b border-[#EBE4D7] bg-[#F7F3EB] px-2 sm:px-4 overflow-x-auto scrollbar-none">
+      <div className="asyt-dossier-tabs flex border-b border-[#EBE4D7] bg-[#F7F3EB] px-2 sm:px-4 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab('experiences')}
           className={`px-3 sm:px-4 py-3 text-xs md:text-sm font-medium border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
@@ -125,13 +125,13 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
       </div>
 
       {/* Tab Content */}
-      <div className="p-4 sm:p-6 flex-1 overflow-y-auto">
+      <div className="asyt-dossier-content p-4 sm:p-6 flex-1 overflow-y-auto">
         {activeTab === 'experiences' && (
           <div className="space-y-6">
             {FABIEN_PROFILE.experiences.map((exp, idx) => (
               <div
                 key={idx}
-                className="editorial-card p-5 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] hover:border-[#D5C7B0] transition-all"
+                className="asyt-dossier-card editorial-card p-5 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] hover:border-[#D5C7B0] transition-all"
               >
                 <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 mb-2">
                   <div>
@@ -170,7 +170,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
                     className="disabled:opacity-40 disabled:cursor-not-allowed text-xs text-[#7A6244] hover:text-[#1E1914] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Volume2 className="w-3.5 h-3.5" />
-                    <span>{lang === 'en' ? 'Ask ASYt about this' : 'Demander à ASYt'}</span>
+                    <span>{lang === 'en' ? 'Ask ASYT about this' : 'Demander à ASYT'}</span>
                   </button>
                 </div>
               </div>
@@ -255,7 +255,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
                 {FABIEN_PROFILE.tools.map((tool, tIdx) => (
                   <div
                     key={tIdx}
-                    className="editorial-card p-3 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] text-center"
+                    className="asyt-dossier-card editorial-card p-3 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] text-center"
                   >
                     <p className="text-xs font-semibold text-[#251E17]">{tool.name}</p>
                     <span className="text-[10px] text-[#867B6C] uppercase tracking-wider font-mono">
@@ -273,7 +273,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
             {FABIEN_PROFILE.passions.map((p, idx) => (
               <div
                 key={idx}
-                className="editorial-card p-5 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] hover:border-[#D5C7B0] transition-all flex flex-col justify-between"
+                className="asyt-dossier-card editorial-card p-5 rounded-xl bg-[#F6F1E7] border border-[#E7DFD1] hover:border-[#D5C7B0] transition-all flex flex-col justify-between"
               >
                 <div>
                   <h4 className="font-serif text-lg font-semibold text-[#211C16] mb-1.5">
@@ -298,7 +298,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
                     className="disabled:opacity-40 disabled:cursor-not-allowed text-xs text-[#7A6244] hover:text-[#1E1914] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Volume2 className="w-3.5 h-3.5" />
-                    <span>{lang === 'en' ? 'Ask ASYt' : 'En savoir plus'}</span>
+                    <span>{lang === 'en' ? 'Ask ASYT' : 'En savoir plus'}</span>
                   </button>
                 </div>
               </div>
