@@ -1,0 +1,37 @@
+name: Quality checks
+
+on:
+  push:
+    branches:
+      - 'feat/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install frozen dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Static type check
+        run: bun run lint
+
+      - name: Unit security tests
+        run: bun run test
+
+      - name: Build static site
+        run: bun run build -- --base=/CV/
+
+      - name: Validate output
+        run: test -f dist/index.html
