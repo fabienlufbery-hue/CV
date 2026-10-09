@@ -453,7 +453,7 @@ export default function App() {
         )}
         {connectionError && <p role="alert" className="mb-5 rounded-xl bg-[#FCEFEB] border border-[#EAD3CA] px-4 py-3 text-sm text-[#8A3628]">{connectionError}</p>}
         {/* Intro Subtitle Banner */}
-        <div className="mb-8 text-center max-w-2xl mx-auto">
+        <div className="mb-8 sm:mb-10 text-center max-w-2xl mx-auto">
           <p className="text-xs uppercase tracking-widest text-[#9A7B48] font-semibold mb-1">
             {lang === 'en' ? 'Executive Profile & AI Voice' : 'Profil Cadre & Voix IA'}
           </p>
@@ -468,7 +468,7 @@ export default function App() {
         </div>
 
         {/* 2-Column Responsive Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
           {/* Left Column: Voice Sphere & Conversation Transcript */}
           <div className="lg:col-span-5 flex flex-col gap-6">
             <VoiceSphere
@@ -502,6 +502,7 @@ export default function App() {
             <ProfileDossier
               lang={lang}
               onAskTopic={(topic) => handleSendMessage(topic)}
+              disabled={backendState !== 'online'}
             />
           </div>
         </div>
