@@ -141,7 +141,7 @@ export default function App() {
           setIsListening(true);
         } catch (micErr) {
           console.warn('[Live] Microphone access denied or unavailable:', micErr);
-          // User can still chat or listen to ASYt's voice
+          // User can still chat or listen to ASYT's voice
         }
       };
 
@@ -368,7 +368,7 @@ export default function App() {
     // 3. Fallback: REST API /api/chat + /api/tts
     try {
       setIsStreaming(true);
-      setStreamingText(lang === 'en' ? 'ASYt is formulating reply...' : 'ASYt formule sa réponse...');
+      setStreamingText(lang === 'en' ? 'ASYT is formulating reply...' : 'ASYT formule sa réponse...');
 
       const chatRes = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
@@ -419,7 +419,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FBF9F5] text-[#1E1B18]">
+    <div id="top" className="asyt-page">
       {/* Top Navigation */}
       <Header
         lang={lang}
@@ -428,9 +428,9 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <main className="asyt-main">
         {backendState !== 'online' && (
-          <section role="status" aria-live="polite" className="mb-7 rounded-2xl border border-[#DED3BF] bg-[#F3EBDD] px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+          <section role="status" aria-live="polite" className="asyt-service-notice mb-7 rounded-2xl border border-[#DED3BF] bg-[#F3EBDD] px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
             <div className="flex items-start gap-3">
               <WifiOff aria-hidden="true" className="mt-0.5 w-5 h-5 text-[#9A7B48] shrink-0" />
               <div>
@@ -452,25 +452,49 @@ export default function App() {
           </section>
         )}
         {connectionError && <p role="alert" className="mb-5 rounded-xl bg-[#FCEFEB] border border-[#EAD3CA] px-4 py-3 text-sm text-[#8A3628]">{connectionError}</p>}
-        {/* Intro Subtitle Banner */}
-        <div className="mb-8 sm:mb-10 text-center max-w-2xl mx-auto">
-          <p className="text-xs uppercase tracking-widest text-[#9A7B48] font-semibold mb-1">
-            {lang === 'en' ? 'Executive Profile & AI Voice' : 'Profil Cadre & Voix IA'}
-          </p>
-          <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#1E1914] tracking-tight">
-            Fabien Lufbery
-          </h2>
-          <p className="font-serif italic text-base text-[#675C4E] mt-1">
-            {lang === 'en'
-              ? 'Interactive Voice Representation • Powered by ASYt'
-              : 'Représentation Vocale Interactive • Animée par ASYt'}
-          </p>
+        {/* Editorial hero — the story starts with the person, not the technology. */}
+        <section className="asyt-hero" aria-labelledby="asyt-hero-title">
+          <div className="asyt-hero-content">
+            <span className="asyt-eyebrow"><span className="asyt-eyebrow-dash" /> {lang === 'fr' ? 'UNE NOUVELLE FAÇON DE SE PRÉSENTER' : 'A NEW WAY TO INTRODUCE YOURSELF'}</span>
+            <h1 id="asyt-hero-title" className="asyt-hero-title">
+              <span>Fabien</span>
+              <span>Lufbery<span className="asyt-hero-dot">.</span></span>
+            </h1>
+            <p className="asyt-hero-subtitle">{lang === 'fr' ? 'Au-delà du CV.' : 'Beyond the résumé.'} <em>{lang === 'fr' ? 'Une conversation.' : 'A conversation.'}</em></p>
+            <p className="asyt-hero-description">
+              {lang === 'fr'
+                ? 'Un parcours, des ambitions, des idées. Découvrez la personne derrière les expériences — avec ASYT, une nouvelle façon d’entrer en contact.'
+                : 'Experience, ambition, perspective. Discover the person behind the work — through ASYT, a new way to connect.'}
+            </p>
+            <div className="asyt-hero-cta-row">
+              <a href="#voice" className="asyt-hero-cta-primary">{lang === 'fr' ? 'Rencontrer ASYT' : 'Meet ASYT'} <span aria-hidden="true">↗</span></a>
+              <a href="#profile" className="asyt-hero-cta-secondary">{lang === 'fr' ? 'Découvrir le parcours' : 'Explore the profile'} <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+          <div className="asyt-hero-art" aria-hidden="true">
+            <div className="asyt-hero-art-label">THE ASYT <span>EXPERIENCE</span></div>
+            <div className="asyt-hero-art-orbit">
+              <span className="asyt-art-ring ring-1" />
+              <span className="asyt-art-ring ring-2" />
+              <span className="asyt-art-ring ring-3" />
+              <span className="asyt-art-mark">A</span>
+              <span className="asyt-art-gold-point point-1" />
+              <span className="asyt-art-gold-point point-2" />
+            </div>
+            <div className="asyt-hero-art-foot"><span>HUMAN FIRST</span><span>EST. 2026 — PARIS</span></div>
+          </div>
+          <div className="asyt-hero-corner" aria-hidden="true">✳</div>
+        </section>
+
+        <div className="asyt-section-lead">
+          <div><span className="asyt-section-count">01—02</span><span className="asyt-section-divider" /> <span className="asyt-section-label">{lang === 'fr' ? 'L’EXPÉRIENCE INTERACTIVE' : 'THE INTERACTIVE EXPERIENCE'}</span></div>
+          <span className="asyt-section-side">{lang === 'fr' ? 'Faites connaissance, autrement' : 'GET TO KNOW ME, DIFFERENTLY'}</span>
         </div>
 
         {/* 2-Column Responsive Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
+        <div className="asyt-experience-grid">
           {/* Left Column: Voice Sphere & Conversation Transcript */}
-          <div className="lg:col-span-5 flex flex-col gap-6">
+          <div className="asyt-experience-left">
             <VoiceSphere
               isConnected={isConnected}
               isConnecting={isConnecting}
@@ -498,7 +522,7 @@ export default function App() {
           </div>
 
           {/* Right Column: Fabien's Dossier */}
-          <div className="lg:col-span-7">
+          <div className="asyt-experience-right">
             <ProfileDossier
               lang={lang}
               onAskTopic={(topic) => handleSendMessage(topic)}
@@ -509,11 +533,11 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#ECE5D9] bg-[#F7F3EA] py-6 text-center text-xs text-[#7F7464]">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 font-serif">
-          <span>ASYt • Voice Assistant representing Fabien Lufbery</span>
-          <span>ESCE Business School — Paris La Défense</span>
-          <span>Powered by Gemini Live API</span>
+      <footer className="asyt-footer">
+        <div className="asyt-footer-inner">
+          <span className="asyt-footer-brand">ASYT<span>.</span></span>
+          <span>{lang === 'fr' ? 'Des idées humaines. Une nouvelle expérience.' : 'Human ideas. A new experience.'}</span>
+          <span>© 2026 <span className="asyt-footer-separator">/</span> PARIS, FRANCE</span>
         </div>
       </footer>
     </div>

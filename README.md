@@ -1,4 +1,4 @@
-# ASYt · Interactive Voice CV
+# ASYT · The Human Side of AI
 
 Bilingual React/Vite CV with a Node/Bun Gemini voice gateway.
 
@@ -30,7 +30,7 @@ The repository includes a [`render.yaml`](render.yaml) Blueprint for a **separat
 1. In [Render Dashboard](https://dashboard.render.com/), choose **New → Blueprint**, connect `fabienlufbery-hue/CV` and select `render.yaml`.
 2. Review the **Free** instance plan and any billing terms before accepting; the Gemini API can incur separate usage costs.
 3. Enter `GEMINI_API_KEY` **in the Render secret field** when prompted. Do not paste secrets into GitHub or chat messages. The service's `/api/health` returns 503 until this key exists.
-4. When Render reports the web service healthy, note its public HTTPS URL ending in `.onrender.com`. You must then set the GitHub Actions repository **variable** `VITE_API_BASE_URL` to that origin (no trailing slash), and rerun **Deploy ASYt CV to GitHub Pages**.
+4. When Render reports the web service healthy, note its public HTTPS URL ending in `.onrender.com`. You must then set the GitHub Actions repository **variable** `VITE_API_BASE_URL` to that origin (no trailing slash), and rerun **Deploy ASYT CV to GitHub Pages**.
 5. Verify text chat and voice in a browser, plus backend logs and rate limits. Free instances can sleep and take time to wake; a 15-second WebSocket connection timeout may need adjusting for cold starts.
 
 **Production warning:** the API is publicly callable without user authentication. An origin allowlist and process-local rate limits do not prevent abuse by custom clients. Configure upstream abuse protection and Gemini quota/billing limits **before** enabling public voice access.
