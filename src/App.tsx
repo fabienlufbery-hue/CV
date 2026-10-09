@@ -46,7 +46,7 @@ export default function App() {
   useEffect(() => {
     if (!backendConfigured) { setBackendState('offline'); return; }
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 7000);
+    const timeout = window.setTimeout(() => controller.abort(), 90000);
     setBackendState('checking');
     fetch(apiUrl('/api/health'), { signal: controller.signal })
       .then((response) => setBackendState(response.ok ? 'online' : 'offline'))
@@ -113,7 +113,7 @@ export default function App() {
           setConnectionError(lang === 'fr' ? 'Connexion vocale trop longue.' : 'Voice connection timed out.');
           ws.close();
         }
-      }, 15000);
+      }, 120000);
 
       const startMicrophone = async () => {
 
