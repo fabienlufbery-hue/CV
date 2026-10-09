@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { WebSocketServer, WebSocket } from 'ws';
 import { GoogleGenAI, Modality, type LiveServerMessage } from '@google/genai';
+import { createWindowLimiter, isAllowedOrigin, parseChatBody, parseTtsBody, pcmToWav } from './server/security.ts';
 
 dotenv.config();
 
@@ -15,7 +16,44 @@ const app = express();
 const server = http.createServer(app);
 const port = Number(process.env.PORT) || 3000;
 
-app.use(express.json());
+app.disable('x-powered-by');
+if (process.env.TRUST_PROXY === '1') app.set('trust proxy', 1);
+
+// An Origin check helps guard browser requests; deploy behind network rate limits
+// and provider spending quotas as this cannot authenticate a public endpoint.
+const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'https://fabienlufbery-hue.github.io,http://localhost:3000,http://localhost:5173')
+  .split(',').map((value) => value.trim()).filter(Boolean);
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  const origin = req.headers.origin;
+  if (!isAllowedOrigin(origin, req.headers.host, allowedOrigins)) {
+    res.status(403).json({ error: 'Origin not permitted' });
+    return;
+  }
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  next();
+});
+app.use(express.json({ limit: '24kb' }));
+
+const chatLimit = createWindowLimiter(12, 60_000);
+const ttsLimit = createWindowLimiter(8, 60_000);
+function enforceLimit(req: import('express').Request, res: import('express').Response, limit: (key: string) => boolean): boolean {
+  if (limit(req.ip || req.socket.remoteAddress || 'unknown')) return true;
+  res.setHeader('Retry-After', '60');
+  res.status(429).json({ error: 'Too many requests. Please try again shortly.' });
+  return false;
+}
 
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
@@ -89,6 +127,11 @@ Your identity and voice persona:
 - Tone reminder: Speak in a deep male voice tone. Express Fabien's qualities with natural confidence, clarity, and sophistication.
 `;
 
+// Public readiness check: never reveals credentials.
+app.get('/api/health', (_req, res) => {
+  res.status(apiKey ? 200 : 503).json({ status: apiKey ? 'ok' : 'unavailable' });
+});
+
 // API Endpoints
 app.get('/api/profile', (_req, res) => {
   res.json({
@@ -133,10 +176,11 @@ app.get('/api/profile', (_req, res) => {
 // REST Fallback for Chat
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, history = [] } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
-    }
+    if (!apiKey) return res.status(503).json({ error: 'Voice service is not configured' });
+    if (!enforceLimit(req, res, chatLimit)) return;
+    const parsed = parseChatBody(req.body);
+    if (!parsed) return res.status(400).json({ error: 'Invalid message or history' });
+    const { message, history } = parsed;
 
     const contents = [
       ...history.map((h: { role: string; content: string }) => ({
@@ -150,7 +194,7 @@ app.post('/api/chat', async (req, res) => {
     ];
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: process.env.GEMINI_CHAT_MODEL || 'gemini-3.8-flash',
       contents,
       config: {
         systemInstruction: ASYT_SYSTEM_INSTRUCTION,
@@ -161,20 +205,21 @@ app.post('/api/chat', async (req, res) => {
     res.json({ reply });
   } catch (error: any) {
     console.error('[API /api/chat error]:', error);
-    res.status(500).json({ error: error?.message || 'Failed to process chat message' });
+    res.status(502).json({ error: 'Chat temporarily unavailable' });
   }
 });
 
 // REST Endpoint for TTS using Gemini Voice
 app.post('/api/tts', async (req, res) => {
   try {
-    const { text, voice = 'Fenrir' } = req.body;
-    if (!text) {
-      return res.status(400).json({ error: 'Text is required' });
-    }
+    if (!apiKey) return res.status(503).json({ error: 'Voice service is not configured' });
+    if (!enforceLimit(req, res, ttsLimit)) return;
+    const parsed = parseTtsBody(req.body);
+    if (!parsed) return res.status(400).json({ error: 'Invalid TTS text' });
+    const { text } = parsed;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash-lite-tts',
+      model: process.env.GEMINI_TTS_MODEL || 'gemini-3.8-flash-lite-tts',
       contents: [
         {
           role: 'user',
@@ -185,26 +230,50 @@ app.post('/api/tts', async (req, res) => {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: voice || 'Fenrir' },
+            prebuiltVoiceConfig: { voiceName: 'Fenrir' },
           },
         },
       },
     });
 
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) {
-      return res.status(500).json({ error: 'No audio generated' });
-    }
-
-    res.json({ audio: base64Audio, mimeType: 'audio/wav' });
+    const audioPart = response.candidates?.[0]?.content?.parts?.find((part) => part.inlineData?.data)?.inlineData;
+    if (!audioPart?.data) return res.status(502).json({ error: 'No audio generated' });
+    // Gemini TTS often emits raw 16-bit PCM; browsers need a WAV container.
+    const raw = Buffer.from(audioPart.data, 'base64');
+    const mime = audioPart.mimeType || '';
+    const wav = mime.startsWith('audio/wav') ? raw : pcmToWav(raw);
+    res.json({ audio: wav.toString('base64'), mimeType: 'audio/wav' });
   } catch (error: any) {
     console.error('[API /api/tts error]:', error);
-    res.status(500).json({ error: error?.message || 'Failed to synthesize speech' });
+    res.status(502).json({ error: 'Speech temporarily unavailable' });
   }
 });
 
 // WebSocket Server for Gemini Live API
-const wss = new WebSocketServer({ server, path: '/live' });
+// Explicit upgrade validation, fixed payload caps and connection quotas.
+const wss = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024, perMessageDeflate: false });
+const liveLimit = createWindowLimiter(6, 60_000);
+const liveConnections = new Map<string, number>();
+server.on('upgrade', (req, socket, head) => {
+  const ip = req.socket.remoteAddress || 'unknown';
+  const reject = (code: number, reason: string) => {
+    socket.write(`HTTP/1.1 ${code} ${reason}\r\nConnection: close\r\n\r\n`);
+    socket.destroy();
+  };
+  if (req.url !== '/live') return reject(404, 'Not Found');
+  if (!apiKey) return reject(503, 'Service Unavailable');
+  if (!isAllowedOrigin(req.headers.origin, req.headers.host, allowedOrigins)) return reject(403, 'Forbidden');
+  if (!liveLimit(ip) || (liveConnections.get(ip) || 0) >= 2 || wss.clients.size >= 30) return reject(429, 'Too Many Requests');
+  wss.handleUpgrade(req, socket, head, (client) => {
+    liveConnections.set(ip, (liveConnections.get(ip) || 0) + 1);
+    client.once('close', () => {
+      const current = liveConnections.get(ip) || 1;
+      if (current <= 1) liveConnections.delete(ip);
+      else liveConnections.set(ip, current - 1);
+    });
+    wss.emit('connection', client, req);
+  });
+});
 
 wss.on('connection', async (clientWs: WebSocket) => {
   console.log('[Live WebSocket] Client connected');
@@ -227,7 +296,7 @@ wss.on('connection', async (clientWs: WebSocket) => {
   try {
     // Connect to gemini-3.8-live
     liveSession = await ai.live.connect({
-      model: 'gemini-3.8-live',
+      model: process.env.GEMINI_LIVE_MODEL || 'gemini-3.8-live',
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
@@ -282,12 +351,16 @@ wss.on('connection', async (clientWs: WebSocket) => {
         onerror: (err: any) => {
           console.error('[Live Session Error]:', err);
           if (clientWs.readyState === WebSocket.OPEN) {
-            clientWs.send(JSON.stringify({ type: 'error', error: err?.message || 'Live session error' }));
+            clientWs.send(JSON.stringify({ type: 'error', error: 'Live session interrupted' }));
           }
         },
       },
     });
 
+    if (isClosing || clientWs.readyState !== WebSocket.OPEN) {
+      cleanupSession();
+      return;
+    }
     clientWs.send(JSON.stringify({ type: 'ready', message: 'Connected to Gemini Live' }));
 
     // Send initial greeting trigger to the model if session connected
@@ -304,7 +377,7 @@ wss.on('connection', async (clientWs: WebSocket) => {
       clientWs.send(
         JSON.stringify({
           type: 'error',
-          error: err?.message || 'Failed to initialize Gemini Live session. Ensure GEMINI_API_KEY is configured.',
+          error: 'Voice connection could not be established',
         })
       );
     }
@@ -314,7 +387,8 @@ wss.on('connection', async (clientWs: WebSocket) => {
     try {
       const parsed = JSON.parse(rawData.toString());
 
-      if (parsed.type === 'audio' && parsed.audio) {
+      if (!parsed || typeof parsed !== 'object') return;
+      if (parsed.type === 'audio' && typeof parsed.audio === 'string' && parsed.audio.length <= 60_000 && /^[A-Za-z0-9+/=]+$/.test(parsed.audio)) {
         if (liveSession) {
           liveSession.sendRealtimeInput({
             audio: {
@@ -323,14 +397,14 @@ wss.on('connection', async (clientWs: WebSocket) => {
             },
           });
         }
-      } else if (parsed.type === 'text' && parsed.text) {
+      } else if (parsed.type === 'text' && typeof parsed.text === 'string' && parsed.text.trim() && parsed.text.length <= 2000) {
         if (liveSession) {
           liveSession.sendRealtimeInput({
             text: parsed.text,
           });
         }
       } else if (parsed.type === 'ping') {
-        clientWs.send(JSON.stringify({ type: 'pong' }));
+        if (clientWs.readyState === WebSocket.OPEN) clientWs.send(JSON.stringify({ type: 'pong' }));
       }
     } catch (err) {
       console.error('[Live WS Message parse error]:', err);
@@ -373,4 +447,5 @@ async function startServer() {
 
 startServer().catch((err) => {
   console.error('[Server startup error]:', err);
+  process.exitCode = 1;
 });
