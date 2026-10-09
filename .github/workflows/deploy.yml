@@ -33,7 +33,7 @@ jobs:
       - name: Build React/Vite for /CV/
         env:
           # Public URL only, never put GEMINI_API_KEY in VITE_* variables.
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://asyt-fabien-voice-api.onrender.com' }}
         run: bun run build -- --base=/CV/
 
       - name: Check generated site
