@@ -1,6 +1,6 @@
 {
-  "name": "ASYt — Fabien Lufbery Voice Assistant",
-  "description": "Minimalist and sophisticated voice assistant representing Fabien Lufbery, powered by Gemini Live API.",
+  "name": "ASYT — Fabien Lufbery Voice Assistant",
+  "description": "Editorial interactive AI voice portfolio representing Fabien Lufbery, powered by Gemini Live.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
