@@ -17,9 +17,10 @@ import { FABIEN_PROFILE } from '../data/fabienProfile.ts';
 interface ProfileDossierProps {
   lang: 'en' | 'fr';
   onAskTopic: (topicPrompt: string) => void;
+  disabled?: boolean;
 }
 
-export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic }) => {
+export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic, disabled = false }) => {
   const [activeTab, setActiveTab] = useState<'experiences' | 'education' | 'skills' | 'passions'>('experiences');
 
   return (
@@ -157,6 +158,8 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
 
                 <div className="mt-4 pt-3 border-t border-[#E6DDD0] flex justify-end">
                   <button
+                    disabled={disabled}
+                    title={disabled ? (lang === 'fr' ? 'Assistant vocal indisponible' : 'AI assistant offline') : undefined}
                     onClick={() =>
                       onAskTopic(
                         lang === 'en'
@@ -164,7 +167,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
                           : `Parle-moi en détail du rôle de Fabien chez ${exp.company} (${exp.roleFr}).`
                       )
                     }
-                    className="text-xs text-[#7A6244] hover:text-[#1E1914] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="disabled:opacity-40 disabled:cursor-not-allowed text-xs text-[#7A6244] hover:text-[#1E1914] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Volume2 className="w-3.5 h-3.5" />
                     <span>{lang === 'en' ? 'Ask ASYt about this' : 'Demander à ASYt'}</span>
@@ -283,6 +286,8 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
 
                 <div className="mt-4 pt-3 border-t border-[#E6DDD0] flex justify-end">
                   <button
+                    disabled={disabled}
+                    title={disabled ? (lang === 'fr' ? 'Assistant vocal indisponible' : 'AI assistant offline') : undefined}
                     onClick={() =>
                       onAskTopic(
                         lang === 'en'
@@ -290,7 +295,7 @@ export const ProfileDossier: React.FC<ProfileDossierProps> = ({ lang, onAskTopic
                           : `Parle-moi de la passion de Fabien pour : ${p.titleFr}.`
                       )
                     }
-                    className="text-xs text-[#7A6244] hover:text-[#1E1914] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="disabled:opacity-40 disabled:cursor-not-allowed text-xs text-[#7A6244] hover:text-[#1E1914] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Volume2 className="w-3.5 h-3.5" />
                     <span>{lang === 'en' ? 'Ask ASYt' : 'En savoir plus'}</span>
