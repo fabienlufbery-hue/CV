@@ -178,12 +178,13 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
               ? 'Ask ASYt anything about Fabien (e.g. OMD experience, skills, karting)...'
               : 'Posez une question sur Fabien (expériences, compétences, karting)...'
           }
-          className="flex-1 px-4 py-2.5 text-sm bg-[#FFFFFF] border border-[#DDD4C5] rounded-xl text-[#221D17] placeholder:text-[#9A9081] focus:outline-none focus:border-[#9E7D47] focus:ring-1 focus:ring-[#9E7D47]/30 transition-all"
+          className="disabled:opacity-50 disabled:cursor-not-allowed min-w-0 flex-1 px-4 py-2.5 text-sm bg-[#FFFFFF] border border-[#DDD4C5] rounded-xl text-[#221D17] placeholder:text-[#9A9081] focus:outline-none focus:border-[#9E7D47] focus:ring-1 focus:ring-[#9E7D47]/30 transition-all"
         />
         <button
           type="submit"
-          disabled={!inputText.trim()}
-          className="p-2.5 bg-[#2B251F] hover:bg-[#3E352D] disabled:opacity-40 text-[#FAF6F0] rounded-xl transition-all cursor-pointer shadow-xs"
+          disabled={disabled || isStreaming || !inputText.trim()}
+          aria-label={lang === 'fr' ? 'Envoyer le message' : 'Send message'}
+          className="p-2.5 bg-[#2B251F] hover:bg-[#3E352D] disabled:cursor-not-allowed disabled:opacity-40 text-[#FAF6F0] rounded-xl transition-all cursor-pointer shadow-xs"
           title={lang === 'en' ? 'Send message' : 'Envoyer'}
         >
           <Send className="w-4 h-4" />
