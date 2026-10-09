@@ -17,6 +17,7 @@ interface ConversationStreamProps {
   onPlayTTS: (text: string) => void;
   lang: 'en' | 'fr';
   isPlayingTTS: boolean;
+  disabled?: boolean;
 }
 
 export const ConversationStream: React.FC<ConversationStreamProps> = ({
@@ -27,6 +28,7 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
   onPlayTTS,
   lang,
   isPlayingTTS,
+  disabled = false,
 }) => {
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -40,13 +42,13 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = inputText.trim();
-    if (!trimmed) return;
+    if (!trimmed || disabled || isStreaming) return;
     onSendMessage(trimmed);
     setInputText('');
   };
 
   const handleChipClick = (question: string) => {
-    onSendMessage(question);
+    if (!disabled && !isStreaming) onSendMessage(question);
   };
 
   return (
@@ -72,7 +74,9 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
             <button
               key={idx}
               onClick={() => handleChipClick(text)}
-              className="shrink-0 px-3 py-1.5 rounded-full bg-[#F3EDE2] hover:bg-[#EAE1D1] text-[#3D352B] text-xs border border-[#DFD6C6] transition-colors flex items-center gap-1.5 cursor-pointer"
+              disabled={disabled || isStreaming}
+              title={disabled ? (lang === 'fr' ? 'IA indisponible' : 'AI offline') : undefined}
+              className="disabled:opacity-50 disabled:cursor-not-allowed shrink-0 px-3 py-1.5 rounded-full bg-[#F3EDE2] hover:bg-[#EAE1D1] text-[#3D352B] text-xs border border-[#DFD6C6] transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <Sparkles className="w-3 h-3 text-[#9E7D47]" />
               <span>{text}</span>
@@ -117,8 +121,10 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
                   {!isUser && (
                     <button
                       onClick={() => onPlayTTS(m.text)}
+                      disabled={disabled || isPlayingTTS}
+                      aria-label={lang === 'fr' ? 'Écouter le message' : 'Play message audio'}
                       title={lang === 'en' ? 'Listen to deep voice' : 'Écouter la voix'}
-                      className="text-[#847868] hover:text-[#2B251F] transition-colors p-0.5"
+                      className="disabled:opacity-40 text-[#847868] hover:text-[#2B251F] transition-colors p-0.5"
                     >
                       <Volume2 className="w-3.5 h-3.5" />
                     </button>
@@ -163,6 +169,9 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
         <input
           type="text"
           value={inputText}
+          maxLength={2000}
+          disabled={disabled || isStreaming}
+          aria-label={lang === 'fr' ? 'Votre question' : 'Your question'}
           onChange={(e) => setInputText(e.target.value)}
           placeholder={
             lang === 'en'
