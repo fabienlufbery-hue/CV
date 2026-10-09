@@ -62,7 +62,7 @@ export const ConversationStream: React.FC<ConversationStreamProps> = ({
           </h2>
         </div>
         <span className="text-xs text-[#807669] font-serif italic">
-          ASYt • Live AI
+          {disabled ? (lang === 'fr' ? 'Mode lecture' : 'Read-only mode') : 'ASYt • Live AI'}
         </span>
       </div>
 
