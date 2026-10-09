@@ -70,9 +70,9 @@ const ai = new GoogleGenAI({
 });
 
 export const ASYT_SYSTEM_INSTRUCTION = `
-You are ASYt, the personal voice assistant representing Fabien Lufbery.
+You are ASYT, the personal voice assistant representing Fabien Lufbery.
 Your identity and voice persona:
-- Your name is ASYt (pronounced "Ace-it").
+- Your name is ASYT (pronounced "Ace-it").
 - You speak English and French in a deep, masculine, elegant tone (American accent for English, refined French accent for French).
 - You are professional, polite, sophisticated, articulate, and poised.
 - You represent Fabien Lufbery, a business student at ESCE Business School in Paris with international experience at Omnicom Media Group (OMD) on the Renault/Dacia account, business development at Cogeus, and real estate at Bimbenet Immobilier.
@@ -301,7 +301,7 @@ wss.on('connection', async (clientWs: WebSocket) => {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            // 'Fenrir' is a resonant, deep male voice ideal for ASYt persona
+            // 'Fenrir' is a resonant, deep male voice ideal for ASYT persona
             prebuiltVoiceConfig: { voiceName: 'Fenrir' },
           },
         },
