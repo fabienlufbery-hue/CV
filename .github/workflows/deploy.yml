@@ -1,4 +1,4 @@
-name: Deploy ASYt CV to GitHub Pages
+name: Deploy ASYT CV to GitHub Pages
 
 on:
   push:
